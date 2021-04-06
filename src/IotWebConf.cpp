@@ -30,17 +30,21 @@ namespace iotwebconf
 
 IotWebConf::IotWebConf(
     const char* defaultThingName, DNSServer* dnsServer, WebServerWrapper* webServerWrapper,
-    const char* initialApPassword, const char* configVersion)
+    const char* initialApPassword, const char* configVersion, bool authenticationEnabled)
 {
   this->_thingNameParameter.defaultValue = defaultThingName;
   this->_dnsServer = dnsServer;
   this->_webServerWrapper = webServerWrapper;
   this->_initialApPassword = initialApPassword;
   this->_configVersion = configVersion;
+  this->_authenticationEnabled = authenticationEnabled;
 
   this->_apTimeoutParameter.visible = false;
   this->_systemParameters.addItem(&this->_thingNameParameter);
-  this->_systemParameters.addItem(&this->_apPasswordParameter);
+  if (this->_authenticationEnabled)
+  {
+    this->_systemParameters.addItem(&this->_apPasswordParameter);
+  }
   this->_systemParameters.addItem(&this->_wifiParameters);
   this->_systemParameters.addItem(&this->_apTimeoutParameter);
 
@@ -274,7 +278,7 @@ void IotWebConf::handleConfig(WebRequestWrapper* webRequestWrapper)
   if (this->_state == IOTWEBCONF_STATE_ONLINE)
   {
     // -- Authenticate
-    if (!webRequestWrapper->authenticate(
+    if (this->_authenticationEnabled && !webRequestWrapper->authenticate(
             IOTWEBCONF_ADMIN_USER_NAME, this->_apPassword))
     {
       IOTWEBCONF_DEBUG_LINE(F("Requesting authentication."));
@@ -362,7 +366,7 @@ void IotWebConf::handleConfig(WebRequestWrapper* webRequestWrapper)
     page += htmlFormatProvider->getHeadExtension();
     page += htmlFormatProvider->getHeadEnd();
     page += "Configuration saved. ";
-    if (this->_apPassword[0] == '\0')
+    if (this->_authenticationEnabled && this->_apPassword[0] == '\0')
     {
       page += F("You must change the default AP password to continue. Return "
                 "to <a href=''>configuration page</a>.");
@@ -408,12 +412,15 @@ bool IotWebConf::validateForm(WebRequestWrapper* webRequestWrapper)
         "Give a name with at least 3 characters.";
     valid = false;
   }
-  l = webRequestWrapper->arg(this->_apPasswordParameter.getId()).length();
-  if ((0 < l) && (l < 8))
+  if (this->_authenticationEnabled)
   {
-    this->_apPasswordParameter.errorMessage =
-        "Password length must be at least 8 characters.";
-    valid = false;
+    l = webRequestWrapper->arg(this->_apPasswordParameter.getId()).length();
+    if ((0 < l) && (l < 8))
+    {
+      this->_apPasswordParameter.errorMessage =
+          "Password length must be at least 8 characters.";
+      valid = false;
+    }
   }
   l = webRequestWrapper->arg(this->_wifiParameters.wifiPasswordParameter.getId()).length();
   if ((0 < l) && (l < 8))
@@ -587,6 +594,8 @@ void IotWebConf::doLoop()
  */
 void IotWebConf::changeState(byte newState)
 {
+  Serial.print("Start change state to ");
+  Serial.println(newState);
   switch (newState)
   {
     case IOTWEBCONF_STATE_AP_MODE:
@@ -595,6 +604,7 @@ void IotWebConf::changeState(byte newState)
       // in STATE_NOT_CONFIGURED.
       if (mustUseDefaultPassword())
       {
+        Serial.println("must user default password");
 #ifdef IOTWEBCONF_DEBUG_TO_SERIAL
         if (this->_forceDefaultPassword)
         {
@@ -634,6 +644,10 @@ void IotWebConf::changeState(byte newState)
  */
 void IotWebConf::stateChanged(byte oldState, byte newState)
 {
+  Serial.print("State changed from ");
+  Serial.print(oldState);
+  Serial.print(" to: ");
+  Serial.println(newState);
 //  updateOutput();
   switch (newState)
   {
@@ -662,7 +676,7 @@ void IotWebConf::stateChanged(byte oldState, byte newState)
         {
           Serial.println(F("Default password was forced."));
         }
-        if (this->_apPassword[0] == '\0')
+        if (this->_authenticationEnabled && this->_apPassword[0] == '\0')
         {
           Serial.println(F("AP password was not set."));
         }
@@ -716,6 +730,8 @@ void IotWebConf::stateChanged(byte oldState, byte newState)
       this->blinkInternal(8000, 2);
       if (this->_updateServerUpdateCredentialsFunction != NULL)
       {
+        Serial.println("************ test");
+        Serial.println(this->_updateServerUpdateCredentialsFunction ? "Not null" : "null");
         this->_updateServerUpdateCredentialsFunction(
             IOTWEBCONF_ADMIN_USER_NAME, this->_apPassword);
       }

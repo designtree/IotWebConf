@@ -172,15 +172,15 @@ public:
    */
   IotWebConf(
       const char* thingName, DNSServer* dnsServer, WebServer* server,
-      const char* initialApPassword, const char* configVersion = "init") :
-      IotWebConf(thingName, dnsServer, &this->_standardWebServerWrapper, initialApPassword, configVersion)
+      const char* initialApPassword, const char* configVersion = "init", bool authenticationEnabled = true) :
+      IotWebConf(thingName, dnsServer, &this->_standardWebServerWrapper, initialApPassword, configVersion, authenticationEnabled)
   {
     this->_standardWebServerWrapper._server = server;
   }
 
   IotWebConf(
       const char* thingName, DNSServer* dnsServer, WebServerWrapper* server,
-      const char* initialApPassword, const char* configVersion = "init");
+      const char* initialApPassword, const char* configVersion = "init", bool authenticationEnabled = true);
 
   /**
    * Provide an Arduino pin here, that has a button connected to it with the other end of the pin is connected to GND.
@@ -531,6 +531,7 @@ public:
   }
 
 private:
+  bool _authenticationEnabled;
   const char* _initialApPassword = NULL;
   const char* _configVersion;
   DNSServer* _dnsServer;
@@ -603,11 +604,11 @@ private:
   void stateChanged(byte oldState, byte newState);
   bool mustUseDefaultPassword()
   {
-    return this->_forceDefaultPassword || (this->_apPassword[0] == '\0');
+    return this->_forceDefaultPassword || ((this->_apPassword[0] == '\0') && this->_authenticationEnabled);
   }
   bool mustStayInApMode()
   {
-    return this->_forceDefaultPassword || (this->_apPassword[0] == '\0') ||
+    return this->_forceDefaultPassword || ((this->_apPassword[0] == '\0') && this->_authenticationEnabled) ||
       (this->_wifiParameters._wifiSsid[0] == '\0') || this->_forceApMode;
   }
   bool isIp(String str);
