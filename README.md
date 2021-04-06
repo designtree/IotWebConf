@@ -1,7 +1,7 @@
 # IotWebConf [![Build Status](https://travis-ci.org/prampec/IotWebConf.svg?branch=master)](https://travis-ci.org/prampec/IotWebConf)
 
 ## Upgrading to v3.0.0
-Lately version 3.0.0 is released. This release in backward compatible with
+Lately version 3.0.0 is released. This release is not backward compatible with
 older versions, and some modification have to be done on existing codes.
 **Please visit [Migration Guide](doc/MigrationGuide-v3.0.0.md) for
  details!**
@@ -20,7 +20,7 @@ Also visit experimental [Discord server](https://discord.gg/GR3uQeD).
 
   - Manages WiFi connection settings,
   - Provides a config portal user interface,
-  - You can extend the configuration with your own property items, that are stored automatically,
+  - You can extend the configuration with your own sophisticated propery structure, that is stored automatically,
   - Option to configure multiple WiFi connections. (Try next when the
    last used one is just not available.)
   - HTML customization,
@@ -63,9 +63,11 @@ have configured for "AP password". The user name is "admin".
 
 ## IotWebConf vs. WiFiManager
 tzapu's WiFiManager is a great library. The features of IotWebConf may appear very similar to WiFiManager. However, IotWebConf tries to be different.
-  - WiFiManager does not manage your custom properties. IotWebConf stores your configuration in "EEPROM".
-  - WiFiManager does not do validation. IotWebConf allow you to validate your property changes made in the config portal.
-  - With WiFiManager you cannot use both startup and on-demand configuration. With IotWebConf the config portal remains available via the connected local WiFi.
+  - WiFiManager does not allow you to configure **mutiple WiFi** connections. In IotWebConf there is a way to define more connections: if one is not available, the next is tried automatically.
+  - ~~WiFiManager does not manage your **custom properties**.~~ IotWebConf stores your configuration in "EEPROM".
+  - WiFiManager does not do **validation**. IotWebConf allow you to validate your property changes made in the config portal.
+  - ~~WiFiManager does not support ESP32.~~
+  - ~~With WiFiManager you cannot use both startup and **on-demand configuration**.~~ With IotWebConf the config portal remains available via the connected local WiFi.
   - WiFiManager provides list of available networks, and an information page, while these features are cool, IotWebConf tries to keep the code simple. So these features are not (yet) provided by IotWebConf.
   - IotWebConf is fitted for more advanced users. You can keep control of the web server setup, configuration item input field behavior, and validation.
 
@@ -103,4 +105,4 @@ be a standalone solution without any WiFi.
 Although IotWebConf started without being influenced by any other solutions, in the final code you can find some segments borrowed from the WiFiManager library.
   - https://github.com/tzapu/WiFiManager
 
-Thanks to [all contributors](/prampec/IotWebConf/graphs/contributors) providing patches for the library!
+Thanks to [all contributors](https://github.com/prampec/IotWebConf/graphs/contributors) providing patches for the library!
